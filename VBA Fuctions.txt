@@ -1,0 +1,143 @@
+'Function to Return EndColumn based on Row Number
+Public Function FindEndRw(sht1 As Worksheet, colHdr As String) As Long
+    FindEndRw = 0
+    FindEndRw = sht1.Cells(Rows.Count, colHdr).End(xlUp).Row
+End Function
+
+'Function to Return EndColumn based on Column Number
+Public Function FindEndClm(sht1 As Worksheet, RowNum As Double) As Long
+    FindEndClm = 0
+    FindEndClm = sht1.Cells(RowNum, Columns.Count).End(xlToLeft).Column
+End Function
+
+'Function to Return EndColumnAddress based on Row Number
+Public Function FindEndClmAdds(sht1 As Worksheet, RowNum As Long) As String
+    FindEndClmAdds = ""
+    FindEndClmAdds = Split(sht1.Cells(RowNum, Columns.Count).End(xlToLeft).Address, "$")(1)
+End Function
+
+'Function to FindRow and return based on finding the Value in a respective sheet
+Public Function FindRow(sht1 As Worksheet, Findval As Variant) As Long
+    Dim FindVar As Object
+    Set FindVar = sht1.Cells.Find(What:=Findval, lookat:=xlWhole)
+    If Not FindVar Is Nothing Then
+        FindRow = sht1.Cells.Find(What:=Findval, lookat:=xlWhole).Row
+    Else
+         MsgBox "Couldn't find " & Findval, vbInformation, "Automation"
+         Application.StatusBar = ""
+        End
+    End If
+End Function
+
+'Function to FindColumn and return based on finding the Value in a respective sheet
+Public Function FindCol(shtTEMP As Worksheet, Findval As Variant) As Long
+    Dim FindVar As Object
+    Set FindVar = shtTEMP.Cells.Find(What:=Findval, lookat:=xlWhole)
+    If Not FindVar Is Nothing Then
+        FindCol = shtTEMP.Cells.Find(What:=Findval, lookat:=xlWhole).Column
+    Else
+         MsgBox "Couldn't find " & Findval, vbInformation, "Automation"
+         Application.StatusBar = ""
+        End
+    End If
+End Function
+
+'Funtion to Return Address based column number
+Public Function GetColumnLetter(colNum As Integer) As String
+    Dim varr
+    varr = Split(Cells(1, colNum).Address(True, False), "$")
+    GetColumnLetter = varr(0)
+End Function
+
+
+'Function to Return Address based on finding the Value in a respective sheet
+Public Function FindAdds(sht1 As Worksheet, Findval As String) As String
+    Dim FindVar As Object
+    Set FindVar = sht1.Cells.Find(What:=Findval, lookat:=xlWhole)
+    If Not FindVar Is Nothing Then
+        FindAdds = Split(sht1.Cells.Find(What:=Findval, lookat:=xlWhole).Address, "$")(1)
+    Else
+         MsgBox "Couldn't find " & Findval, vbInformation, "Automation"
+         Application.StatusBar = ""
+        End
+    End If
+End Function
+
+'Function to Return Address based on finding the specific part of cell value in a respective sheet
+Public Function FindAdds_Part(sht1 As Worksheet, Findval As Variant) As String
+    Dim FindVar As Object
+    Set FindVar = sht1.Cells.Find(What:=Findval, lookat:=xlPart)
+    If Not FindVar Is Nothing Then
+        FindAdds_Part = Split(sht1.Cells.Find(What:=Findval, lookat:=xlPart).Address, "$")(1)
+    Else
+        MsgBox "Couldn't find " & Findval, vbInformation, "Automation"
+        Application.StatusBar = ""S
+        End
+    End If
+End Function
+
+
+'* Procedure to check whether the column header exist in a sheet or not
+Public Function Column_Check(sht1 As Worksheet, Findval As Variant) As Boolean
+    Dim FindVar As Object
+    Column_Check = False
+    Set FindVar = sht1.Cells.Find(What:=Findval, lookat:=xlWhole)
+    If Not FindVar Is Nothing Then
+        Column_Check = True
+    Else
+        Column_Check = False
+    End If
+    
+End Function
+
+
+'''***** File exist or not
+Public Function FileExist(strFileName As String)
+    FileExist = False
+    If Dir(strFileName, vbDirectory) <> "" Then
+        FileExist = True
+    End If
+End Function
+
+
+'******************* File is open or not***********************
+Public Function IsFileOpen(FileName As String)
+    Dim iFilenum As Long
+    Dim iErr As Long
+     
+    On Error Resume Next
+    iFilenum = FreeFile()
+    Open FileName For Input Lock Read As #iFilenum
+    Close iFilenum
+    iErr = Err
+    On Error GoTo 0
+     
+    Select Case iErr
+    Case 0:    IsFileOpen = False
+    Case 70:   IsFileOpen = True
+    Case Else: Error iErr
+    End Select
+     
+End Function
+
+''Function to Return the Sheet exists or not
+Function WorksheetExists(WorksheetName As String, WorkbookName As Workbook) As Boolean
+Dim SHT As Worksheet
+
+    For Each SHT In WorkbookName.Worksheets
+        If Application.Proper(SHT.Name) = Application.Proper(WorksheetName) Then
+            WorksheetExists = True
+            Exit Function
+        End If
+    Next SHT
+WorksheetExists = False
+End Function
+
+' With Application
+'        .ScreenUpdating = True
+'        .DisplayAlerts = True
+'        .EnableEvents = True
+'       .Calculation = xlCalculationAutomatic
+'    End With
+
+

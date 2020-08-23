@@ -1,0 +1,148 @@
+''' This Module Discription: Exports th data from Text file to Excel and With Delimiter separets the data column wise
+Option Explicit
+Sub TextToExcel_Main()
+
+Dim FSO As Scripting.FileSystemObject
+Dim FOL As Scripting.Folder
+Dim MyFile As Scripting.File
+Dim MyTextFile As Scripting.TextStream
+Dim lngRow As Long, strWbkOutputName As String, wbkOutput As Workbook, shtOutput As Worksheet, intShtCountLoop As Integer
+Dim strLastColAdr As String, lngLatRow As Long
+
+Set FSO = New Scripting.FileSystemObject
+Set FOL = FSO.GetFolder(ThisWorkbook.Worksheets("Main").Range("E6").Value)
+'Set FOL = FSO.GetFolder("C:\Users\admin\Desktop\VBA-Text to Excel")
+
+With Application
+    .ScreenUpdating = False
+    .EnableEvents = False
+    .DisplayAlerts = False
+    .AskToUpdateLinks = False
+    
+End With
+
+
+Call ValidationOfFiles
+lngRow = 1
+For Each MyFile In FOL.Files
+    If Right(MyFile.Name, 3) = "txt" Then
+        strWbkOutputName = Left(MyFile.Name, (Len(MyFile.Name) - 3))
+        Set wbkOutput = Workbooks.Add
+        Set shtOutput = wbkOutput.Worksheets(1)
+        shtOutput.Name = 1
+        If wbkOutput.Sheets.Count > 1 Then
+            For intShtCountLoop = 2 To wbkOutput.Sheets.Count
+                wbkOutput.Worksheets(intShtCountLoop).Delete
+                intShtCountLoop = intShtCountLoop - 1
+                If wbkOutput.Sheets.Count = 1 Then Exit For
+            Next
+        End If
+        
+        Set MyTextFile = FSO.OpenTextFile(FOL & "\" & MyFile.Name)
+        intShtCountLoop = 1
+        Do While Not MyTextFile.AtEndOfStream
+            If intShtCountLoop = 1 And lngRow < ThisWorkbook.Worksheets("Main").Range("E10").Value Then
+'                Cells(lngRow, 1).Value = MyTextFile.ReadLine
+                wbkOutput.Worksheets(1).Cells(lngRow, 1).Value = MyTextFile.ReadLine
+                lngRow = lngRow + 1
+                If lngRow = ThisWorkbook.Worksheets("Main").Range("E9").Value + 2 Then
+                    wbkOutput.Worksheets(1).Range("A1").EntireColumn.Select
+                    Call Delimiter(1)
+                    intShtCountLoop = intShtCountLoop + 1
+                    Set shtOutput = Nothing
+                    lngRow = 2
+                End If
+                
+            ElseIf intShtCountLoop > 1 Then
+                
+                If lngRow = 2 Then
+                    strLastColAdr = Split(wbkOutput.Worksheets(1).Cells(1, Columns.Count).End(xlToLeft).Address, "$")(1)
+                    Set shtOutput = wbkOutput.Worksheets.Add(After:=wbkOutput.Worksheets(intShtCountLoop - 1))
+                    wbkOutput.Worksheets(1).Range("A1:" & strLastColAdr & 1).Copy Destination:=wbkOutput.Worksheets(intShtCountLoop).Range("A1")
+'                Else
+'                    Set shtOutput = wbkOutput.Worksheets.Add(After:=wbkOutput.Worksheets(1))
+'                    wbkOutput.Worksheets(1).Range("A1:A" & lngLastCol).Copy Destination:=wbkOutput.Worksheets(intShtCountLoop).Range("A1")
+                shtOutput.Name = intShtCountLoop
+                End If
+                
+                
+                wbkOutput.Worksheets(intShtCountLoop).Cells(lngRow, 1).Value = MyTextFile.ReadLine
+                lngRow = lngRow + 1
+'                MsgBox ThisWorkbook.Worksheets("Main").Range("E9").Value + 2
+                If lngRow = ThisWorkbook.Worksheets("Main").Range("E9").Value + 2 Then
+                    lngLatRow = wbkOutput.Worksheets(intShtCountLoop).Cells(Rows.Count, "A").End(xlUp).Row
+                    wbkOutput.Worksheets(intShtCountLoop).Range("A2:A" & lngLatRow).Select
+                    Call Delimiter(2)
+                    intShtCountLoop = intShtCountLoop + 1
+                    Set shtOutput = Nothing
+                    lngRow = 2
+                ElseIf MyTextFile.AtEndOfStream = True Then
+                    lngLatRow = wbkOutput.Worksheets(intShtCountLoop).Cells(Rows.Count, "A").End(xlUp).Row
+                    wbkOutput.Worksheets(intShtCountLoop).Range("A2:A" & lngLatRow).Select
+                    Call Delimiter(2)
+                    Set shtOutput = Nothing
+                End If
+            End If
+            
+         Loop
+    wbkOutput.SaveAs ThisWorkbook.Worksheets("Main").Range("E8").Value & "\" & strWbkOutputName & "xlsx"
+    wbkOutput.Close
+    Set wbkOutput = Nothing
+    End If
+    
+MyTextFile.Close
+lngRow = 1
+Next
+
+With Application
+    .ScreenUpdating = True
+    .EnableEvents = True
+    .DisplayAlerts = True
+    .AskToUpdateLinks = True
+End With
+
+MsgBox " Exporting data from Text to Excel is successfully completed"
+
+End Sub
+
+Sub Delimiter(intRowNum As Integer)
+'
+Dim strDelimiter
+    strDelimiter = ThisWorkbook.Worksheets("Main").Range("E10").Text
+    Selection.TextToColumns Destination:=Range("A" & intRowNum), DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
+        :=strDelimiter, FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1), Array(4, 1), Array(5, _
+        1)), TrailingMinusNumbers:=True
+End Sub
+
+Public Function FolderExist(strPath As String)
+    FolderExist = False
+    If Dir(strPath, vbDirectory) <> "" Then
+        FolderExist = True
+    End If
+End Function
+
+Sub ValidationOfFiles()
+
+Dim blnFileStatus As Boolean
+ 
+    blnFileStatus = FolderExist(ThisWorkbook.Worksheets("Main").Range("E6").Text)
+    If ThisWorkbook.Worksheets("Main").Range("E7").Text = vbNullString Or blnFileStatus = False Then
+        MsgBox "Folder Path is empty or Not found, Please re-check and Re-Run"
+        Exit Sub
+    End If
+        
+    blnFileStatus = True
+    blnFileStatus = FolderExist(ThisWorkbook.Worksheets("Main").Range("E7").Text)
+    If ThisWorkbook.Worksheets("Main").Range("E8").Text = vbNullString Or blnFileStatus = False Then
+        MsgBox "Folder Path is empty or Not found, Please re-check and Re-Run"
+        Exit Sub
+    End If
+   If IsNumeric(ThisWorkbook.Worksheets("Main").Range("E9").Value) = False Or ThisWorkbook.Worksheets("Main").Range("E9").Value = vbNullString Then
+        MsgBox "Please enter Numeric value and Re-Run"
+        Exit Sub
+    End If
+    
+
+End Sub
